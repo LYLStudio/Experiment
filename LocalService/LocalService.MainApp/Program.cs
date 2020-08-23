@@ -13,43 +13,114 @@ namespace LocalService.MainApp
 {
     internal class Program
     {
+        private static Dictionary<string, StartUpInstance> instances = null;
+
+        private static Dictionary<string, StartUpInstance> Instances { get; set; }
+
         private static void Main(string[] args)
         {
+
+            if (args.Length < 2)
+            {
+                return;
+            }
+
+            Console.WriteLine(string.Join(",", args));
+
+            try
+            {
+                var arg0 = args[0]; // apId
+                var arg1 = args[1]; // instanceId
+
+                using (var mutex = new Mutex(false, arg0))
+                {
+                    var isAnotherInstanceOpen = !mutex.WaitOne(TimeSpan.Zero);
+                    if (isAnotherInstanceOpen)
+                    {
+                        //Console.WriteLine("one instance, ");
+                        if (args.Length >= 2)
+                        {
+                            if (!Instances.ContainsKey(arg1))
+                            {
+                                Instances.Add(arg1, new StartUpInstance(arg1));
+                                Instances[arg1].Run();
+                            }
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        Instances = instances ?? new Dictionary<string, StartUpInstance>();
+                        Instances.Add(arg1, new StartUpInstance(arg1));
+                        Instances[arg1].Run();
+
+                        Console.ReadLine();
+                        mutex.ReleaseMutex();
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+        }
+
+    }
+
+    public class StartUpInstance
+    {
+        private readonly Thread thread = null;
+
+        public string InstanceId { get; }
+
+        public StartUpInstance(string instanceId)
+        {
+            InstanceId = instanceId;
             var startTime = DateTime.Now;
             var isSetBreak = false;
             AutoResetEvent mainResetEvent = new AutoResetEvent(false);
 
-            var ds = new DataSimulator();
+            var ds = new DataSimulator(instanceId);
 
             while (!isSetBreak)
             {
-
                 mainResetEvent.WaitOne(100);
 
-                if (DateTime.Now.Subtract(startTime).TotalSeconds > 10)
+                if (DateTime.Now.Subtract(startTime).TotalSeconds > 60)
                     isSetBreak = true;
             }
 
             ds.Dispose();
             mainResetEvent.Dispose();
         }
+
+        public void Run()
+        {
+            thread.Start();
+        }
     }
 
     public class DataSimulator : IDisposable
     {
+        private readonly string fileId = string.Empty;
         private bool disposedValue;
         private readonly int sleep = 0;
         private bool breakSignTriggered = false;
-        private readonly AutoResetEvent mainResetEvent = null;
-        private readonly AutoResetEvent writeDataResetEvent = null;
+        private AutoResetEvent mainResetEvent = null;
+        private AutoResetEvent writeDataResetEvent = null;
 
         private readonly ConcurrentQueue<string> somethingQueue = null;
 
         private readonly Thread mainThread = null;
         private readonly Thread dataWriteThread = null;
 
-        public DataSimulator(int sleep = 1000)
+        public DataSimulator(string fileId, int sleep = 1000)
         {
+            this.fileId = fileId;
             this.sleep = sleep;
             somethingQueue = new ConcurrentQueue<string>();
             mainResetEvent = new AutoResetEvent(false);
@@ -79,15 +150,14 @@ namespace LocalService.MainApp
                 WriteData(data);
 
                 mainResetEvent.WaitOne(sleep);
-                seed = ++seed % 1000;
+                seed = ++seed % sleep;
             }
         }
 
         protected void WriteData(string something)
         {
             somethingQueue.Enqueue(something);
-            mainResetEvent.Set();
-            writeDataResetEvent.Set();
+            writeDataResetEvent?.Set();
         }
 
         private string GenSomethingString(int seed)
@@ -106,7 +176,8 @@ namespace LocalService.MainApp
                         if (string.IsNullOrWhiteSpace(result))
                             continue;
 
-                        File.AppendAllText($"./{nameof(MainApp)}.log", $"{result}{Environment.NewLine}");
+                        Console.WriteLine($"{fileId}:{result}");
+                        //File.AppendAllText($"./{nameof(MainApp)}.log", $"{result}{Environment.NewLine}");
                     }
                 }
                 else
@@ -114,7 +185,7 @@ namespace LocalService.MainApp
                     writeDataResetEvent.WaitOne();
                 }
 
-                writeDataResetEvent.WaitOne(1);
+                writeDataResetEvent.WaitOne(100);
             }
         }
 
@@ -128,6 +199,10 @@ namespace LocalService.MainApp
                     writeDataResetEvent?.Dispose();
                     mainResetEvent?.Dispose();
                 }
+
+                writeDataResetEvent = null;
+                mainResetEvent = null;
+
                 disposedValue = true;
             }
         }
