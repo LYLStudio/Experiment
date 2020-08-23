@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalService.MainApp", "Loc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalService.IncludeLibs", "LocalService.IncludeLibs\LocalService.IncludeLibs.csproj", "{71D1C046-FC88-4A64-BFE6-A83C4A55779D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalService.TestWinService", "LocalService.TestWinService\LocalService.TestWinService.csproj", "{30002CE4-0B04-4B0A-B5E2-55B1C8F164E0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{71D1C046-FC88-4A64-BFE6-A83C4A55779D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71D1C046-FC88-4A64-BFE6-A83C4A55779D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71D1C046-FC88-4A64-BFE6-A83C4A55779D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30002CE4-0B04-4B0A-B5E2-55B1C8F164E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30002CE4-0B04-4B0A-B5E2-55B1C8F164E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30002CE4-0B04-4B0A-B5E2-55B1C8F164E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30002CE4-0B04-4B0A-B5E2-55B1C8F164E0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
